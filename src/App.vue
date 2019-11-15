@@ -32,23 +32,25 @@
         target="_blank"
         text
       >
-        <span class="mr-2">Latest Release</span>
-        <v-icon>mdi-open-in-new</v-icon>
+        <span class="mr-2">Help</span>
       </v-btn>
     </v-app-bar>
 
     <v-content>
+      <Feed />
       <router-view></router-view>
     </v-content>
   </v-app>
 </template>
 
 <script>
-
+import Feed from '@/components/Feed.vue'
 export default {
   name: 'App',
 
-  components: {},
+  components: {
+    Feed
+  },
 
   data: () => ({
     //

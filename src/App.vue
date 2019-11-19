@@ -37,19 +37,16 @@
     </v-app-bar>
 
     <v-content>
-      <Feed />
       <router-view></router-view>
     </v-content>
   </v-app>
 </template>
 
 <script>
-import Feed from '@/components/Feed.vue'
 export default {
   name: 'App',
 
   components: {
-    Feed
   },
 
   data: () => ({

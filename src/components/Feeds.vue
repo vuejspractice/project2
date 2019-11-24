@@ -2,19 +2,9 @@
   <v-container>
     <v-layout wrap>
       <div class="text-center ma-2">
-        <v-snackbar
-          v-model="snackbar" 
-          top 
-          :color='snackbar_color'
-        >
+        <v-snackbar v-model="snackbar" top :color="snackbar_color">
           {{ errorMessage }}
-          <v-btn
-            dark
-            text
-            @click="snackbar = false"
-          >
-            Close
-          </v-btn>
+          <v-btn dark text @click="snackbar = false">Close</v-btn>
         </v-snackbar>
       </div>
       <v-row>
@@ -33,96 +23,41 @@
           </v-flex>
           <br />
           <v-flex v-for="(item, index) in items" :key="index">
-            <v-card
-              class="mx-auto" v-if="item.subtitle"
-            >
+            <v-card class="mx-auto" v-if="item.subtitle">
               <v-list-item>
-                <v-list-item-avatar color="grey"><v-img :src="item.avatar"></v-img></v-list-item-avatar>
+                <v-list-item-avatar color="grey">
+                  <v-img :src="item.avatar"></v-img>
+                </v-list-item-avatar>
                 <v-list-item-content>
-                  <v-list-item-title class="headline" v-html="item.title"></v-list-item-title>
-                  <v-list-item-subtitle>{{item.time}}</v-list-item-subtitle>
+                  <v-list-item-title class="headline" v-html="item.name"></v-list-item-title>
+                  <!-- <v-list-item-subtitle>{{item.time}}</v-list-item-subtitle> -->
                 </v-list-item-content>
               </v-list-item>
 
               <v-card-text v-html="item.subtitle"></v-card-text>
 
               <v-card-actions>
-                <v-btn
-                  text
-                  color="deep-purple accent-4"
-                >
-                  Like
+                <v-btn icon>
+                  <v-icon>share</v-icon>
                 </v-btn>
-                <v-btn
-                  text
-                  color="deep-purple accent-4"
-                >
-                  Comment
+                <v-btn icon>
+                  <v-icon>group_add</v-icon>
+                </v-btn>
+                <v-list-item-subtitle class="ml-5">{{postedDate}} . <v-icon>public</v-icon></v-list-item-subtitle>
+                
+                <v-btn icon @click="item.likesCount++">
+                  <v-icon>thumb_up</v-icon>
                 </v-btn>
                 <v-spacer></v-spacer>
+                <p class="caption font-weight-bold">{{item.likesCount}}</p>
                 <v-btn icon>
-                  <v-icon>thumb_up</v-icon> <p>0</p>
+                  <v-icon>comment</v-icon>
                 </v-btn>
-                <v-btn icon>
-                  <v-icon>comment</v-icon> <p>5</p>
-                </v-btn>
+                <p class="caption font-weight-bold">{{item.comments.length}}</p>
               </v-card-actions>
             </v-card>
-            <v-timeline dense clipped v-if="item.subtitle" style="max-width: 600px;">
-              <v-timeline-item
-                fill-dot
-                class="white--text mb-2"
-                color="grey"
-                large
-              >
-                <template v-slot:icon>
-                  <v-avatar>
-                    <v-img :src="item.avatar"></v-img>
-                  </v-avatar>
-                </template>
-                <v-text-field
-                  v-model="item.message"
-                  hide-details
-                  flat
-                  label="Leave a comment..."
-                  solo
-                  @keydown.enter="comment"
-                >
-                  <template v-slot:append>
-                    <v-btn
-                      icon
-                      class="mx-0"
-                      depressed
-                      @click="comment(index)"
-                    >
-                      <v-icon>send</v-icon>
-                    </v-btn>
-                  </template>
-                </v-text-field>
-              </v-timeline-item>
-
-              <v-slide-x-transition
-                group
-              >
-                <v-timeline-item
-                  v-for="event in item.comments"
-                  :key="event.id"
-                  color="pink"
-                  small
-                >
-                  <template v-slot:icon>
-                    <v-avatar>
-                      <img src="http://i.pravatar.cc/64">
-                    </v-avatar>
-                  </template>
-                  <v-row justify="space-between">
-                    <v-col cols="7" v-text="event.text"></v-col>
-                    <v-col class="text-right" cols="5" v-text="event.time"></v-col>
-                  </v-row>
-                </v-timeline-item>
-              </v-slide-x-transition>
-            </v-timeline>
-            <br>
+            <Comments :item="item" :index="index"></Comments>
+            <br />
           </v-flex>
         </v-col>
         <v-spacer></v-spacer>
@@ -131,19 +66,34 @@
   </v-container>
 </template>
 <script>
-import { mapState } from 'vuex';
+import moment from "moment";
+import { mapState } from "vuex";
+import Comments from "./Comments";
 export default {
   name: "Feeds",
-  components: {},
+  components: { Comments },
+  provide: function() {
+    return {
+      comment: this.comment,
+      like: this.like,
+      unlike: this.unlike
+    };
+  },
+  mounted() {},
   data: () => ({
     htmlText: "",
     items: [
       // { header: 'Today' },
       {
         avatar: "https://cdn.vuetifyjs.com/images/lists/1.jpg",
-        title: "Brunch this weekend?",
+        name: "Jhon Smith",
         time: "Jan 9, 2014",
         comments: [],
+        likesCount: 0,
+        likes: {
+          up: false,
+          down: false
+        },
         message: "",
         subtitle:
           "<span class='text--primary'>Ali Connors</span> &mdash; I'll be in your neighborhood doing errands this weekend. Do you want to hang out?"
@@ -151,11 +101,16 @@ export default {
       { divider: true, inset: true },
       {
         avatar: "https://cdn.vuetifyjs.com/images/lists/2.jpg",
-        title: 'Summer BBQ <span class="grey--text text--lighten-1">4</span>',
+        name: 'Eddi Jhonson',
         time: "Jan 9, 2014",
+        likesCount: 0,
         subtitle:
           "<span class='text--primary'>to Alex, Scott, Jennifer</span> &mdash; Wish I could come, but I'm out of town this weekend.",
         comments: [],
+        likes: {
+          up: false,
+          down: false
+        },
         message: ""
       }
     ],
@@ -170,7 +125,10 @@ export default {
     timeline() {
       return this.events.slice().reverse();
     },
-    ...mapState(["isLoggedIn"])
+    ...mapState(["isLoggedIn"]),
+    postedDate() {
+      return moment().subtract(1, 'days').calendar();
+    }
   },
   methods: {
     comment(index) {
@@ -180,24 +138,38 @@ export default {
       this.items[index].comments.push({
         id: this.nonce++,
         text: this.items[index].message,
-        time: new Date().toLocaleString()
+        time: new Date().toLocaleString(),
+        likes: {
+          up: false,
+          down: false
+        }
       });
 
       this.items[index].message = null;
     },
     submit() {
-      if(this.htmlText) {
+      if (this.htmlText) {
         this.items.push({
           avatar: "https://cdn.vuetifyjs.com/images/lists/5.jpg",
-          title: "Recipe to try" + this.items.length,
+          name: "Jhon Abhraham",
           time: "Jan 9, 2014",
-          subtitle: this.htmlText
+          subtitle: this.htmlText,
+          likesCount: 0,
+          comments: []
         });
         this.htmlText = "";
       } else {
         this.snackbar = true;
-        this.errorMessage = "Please text something...!"
+        this.errorMessage = "Please text something...!";
       }
+    },
+    like(index, ind) {
+      this.items[index].comments[ind].likes.up = !this.items[index].comments[ind].likes.up;
+      this.items[index].comments[ind].likes.down = this.items[index].comments[ind].likes.up ? false : this.items[index].comments[ind].likes.down;
+    },
+    unlike(index, ind) {
+      this.items[index].comments[ind].likes.down = !this.items[index].comments[ind].likes.down;
+      this.items[index].comments[ind].likes.up = this.items[index].comments[ind].likes.down ? false : this.items[index].comments[ind].likes.up;
     }
   }
 };
